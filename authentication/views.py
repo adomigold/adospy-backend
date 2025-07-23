@@ -1,0 +1,292 @@
+# mixins.py
+import datetime
+import json
+import uuid
+from inertia import render
+
+from authentication.tasks import send_email
+from .mixins import InertiaView
+from .forms import SignInForms, SignUpForms, SubscribeForm, TargetAliasNameForm
+from django.shortcuts import redirect
+from .models import User, Target
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.urls import reverse
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+class SigninView(InertiaView):
+    template_name = "SignIn"
+
+    def get_props(self):
+        return {}
+
+    def post(self, request, *args, **kwargs):
+        form = SignInForms(json.loads(request.body))
+        print(form)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            remember_me = form.cleaned_data['remember_me']
+
+            user = authenticate(request, username=username, password=password)
+
+            if user is None:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "username": "Invalid credentials"
+                    }
+                })
+
+            if user.verified is False:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "username": "Email not verified"
+                    }
+                })
+
+            if user.check_password(password) is False:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "username": "Invalid credentials"
+                    }
+                })
+
+            if user.is_active is False:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "username": "Account disabled"
+                    }
+                })
+
+            login(request, user)
+            # Set session expiry time based on remember_me
+            if remember_me == True:
+                request.session.set_expiry(1209600)  # 2 weeks
+            else:
+                request.session.set_expiry(0)
+
+            return redirect("dashboard")
+        return render(request, self.template_name, props={
+            "errors": {
+                "username": "Invalid credentials"
+            }
+        })
+
+
+class SignUpView(InertiaView):
+    template_name = "Signup"
+
+    def get_props(self):
+        return {}
+
+    def post(self, request, *args, **kwargs):
+        form = SignUpForms(json.loads(request.body))
+
+        if form.is_valid():
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            confirm_password = form.cleaned_data['confirm_password']
+
+            if password != confirm_password:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "password": "Passwords do not match"
+                    }
+                })
+
+            if User.objects.filter(email=email).exists():
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "password": "Email already exists"
+                    }
+                })
+
+            user = User.objects.create_user(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                username=email,
+                password=password
+            )
+
+            # Generate token and UID
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            # Create verification link
+            verification_url = request.build_absolute_uri(
+                reverse("verify-email", kwargs={"uidb64": uid, "token": token})
+            )
+
+            # Send verification link
+            title = "Account created successfully"
+            message = f'''
+            Hello {first_name} {last_name},
+
+            Welcome to Adospy – your trusted platform for digital parenting.
+
+            Please verify your email by clicking the link below:
+
+            🔗 {verification_url}
+
+            If you didn’t sign up for Adospy, you can safely ignore this email.
+
+            Best regards,  
+            The Adospy Team
+                    '''
+
+            send_email.delay(title, message, email)
+
+            return render(request, self.template_name, props={
+                "errors": {
+                    "success": "Account created successfully"
+                }
+            })
+        return render(request, self.template_name, props={
+            "errors": {
+                "first_name": "Invalid credentials"
+            }
+        })
+
+
+class VerifyEmailView(InertiaView):
+    template_name = "VerifyEmail"
+
+    def get(self, request, *args, **kwargs):
+        uid = kwargs["uidb64"]
+        token = kwargs["token"]
+
+        try:
+            uid = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            user.verified = True
+            user.verified_at = datetime.datetime.now()
+            user.save()
+
+            return render(request, self.template_name, props={
+                "errors": {
+                    "success": "Email verified successfully"
+                }
+            })
+        return render(request, self.template_name, props={
+            "errors": {
+                "fail": "Invalid verification link"
+            }
+        })
+
+
+class ProfileView(LoginRequiredMixin, InertiaView):
+    template_name = "Profile"
+    login_url = "/signin"
+
+    def get_props(self):
+        user = self.request.user
+
+        return {
+            "user": user,
+        }
+
+
+class TargetsView(LoginRequiredMixin, InertiaView):
+    template_name = "Targets"
+    login_url = "/signin"
+
+    def get_props(self):
+        user = self.request.user
+        targets = Target.objects.filter(user=user).values()
+
+        return {
+            "targets": targets
+        }
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        form = SubscribeForm(json.loads(request.body))
+
+        if form.is_valid():
+            plan_type = form.cleaned_data['plan_type']
+
+            if plan_type not in ["monthly", "annual"]:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "plan_type": "Invalid plan type"
+                    }
+                })
+            if plan_type == "monthly":
+                plan_end = datetime.datetime.now() + datetime.timedelta(days=30)
+            else:
+                plan_end = datetime.datetime.now() + datetime.timedelta(days=365)
+
+            Target.objects.create(
+                user=user,
+                plan_type=plan_type,
+                plan_end=plan_end,
+                license_key=str(uuid.uuid4()).upper(),
+            )
+
+            return render(request, self.template_name, props={
+                "errors": {
+                    "success": "Target created successfully",
+                },
+                "targets": Target.objects.filter(user=user)
+            })
+
+        return render(request, self.template_name, props={
+            "errors": {
+                "plan_type": "Invalid plan type"
+            },
+        })
+
+    def put(self, request, *args, **kwargs):
+        user = self.request.user
+        form = TargetAliasNameForm(json.loads(request.body))
+
+        if form.is_valid():
+            try:
+                target_id = form.cleaned_data['target_id']
+                name_alias = form.cleaned_data['name_alias']
+
+                target = Target.objects.get(id=target_id, user=user)
+                target.name_alias = name_alias
+                target.save()
+
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "success": "Target alias name updated successfully",
+                    },
+                    "targets": Target.objects.filter(user=user).values()
+                })
+            except Target.DoesNotExist:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "name_alias": "Target not found",
+                    },
+                    "targets": Target.objects.filter(user=user).values()
+                })
+
+        return render(request, self.template_name, props={
+            "errors": {
+                "name_alias": "Failed to update target alias name",
+            },
+            "targets": Target.objects.filter(user=user).values()
+        })
+
+    def delete(self, request, *args, **kwargs):
+        user = self.request.user
+        target_id = kwargs["target_id"]
+
+        try:
+            target = Target.objects.get(id=target_id, user=user)
+            target.delete()
+            redirect("targets")
+        except Target.DoesNotExist:
+            redirect("targets")

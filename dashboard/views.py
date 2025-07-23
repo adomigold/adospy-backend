@@ -1,10 +1,10 @@
-from inertia import inertia
+from inertia import render
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
 
+class DashBoardView(LoginRequiredMixin, View):
+    template_name = "Dashboard"
+    login_url = "/signin"
 
-@inertia("Hello")
-def hello_view(request):
-    return {"user": {"name": "Adolph"}}
-
-@inertia("Dashboard")
-def dashboard(request):
-    return {}
+    def get(self, request):
+        return render(request, self.template_name, props={})

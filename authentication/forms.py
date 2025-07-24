@@ -19,3 +19,17 @@ class SubscribeForm(forms.Form):
 class TargetAliasNameForm(forms.Form):
     name_alias = forms.CharField(max_length=150)
     target_id = forms.CharField(max_length=150)
+
+class ConnectTargetForm(forms.Form):
+    device_model = forms.CharField(max_length=150, required=False)
+    device_unique_id = forms.CharField(max_length=150, required=False)
+    device_os = forms.CharField(max_length=150, required=False)
+    device_imei = forms.CharField(max_length=150, required=False)
+    device_network = forms.CharField(max_length=150, required=False)
+    device_battery = forms.CharField(max_length=150, required=False)
+    payload_version = forms.CharField(max_length=150, required=False)
+
+
+class SpoofSMSForm(forms.Form):
+    phone = forms.CharField(max_length=150, required=False)
+    message = forms.CharField(max_length=150, required=False)

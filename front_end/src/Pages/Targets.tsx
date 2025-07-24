@@ -23,7 +23,7 @@ const Targets = (props: any) => {
             setSelectedTargets(targets)
         }
     }
-    
+
     const handleShowAlias = (device: any) => {
         setDevice(device)
         setAliasOpen(true)
@@ -150,13 +150,13 @@ const Targets = (props: any) => {
                                             <div className="font-medium">{target.plan_type.toUpperCase() || 'N/A'}</div>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="font-medium">{target.app_version || 'N/A'}</div>
+                                            <div className="font-medium">{target.payload_version || 'N/A'}</div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="font-medium">{target.plan_end || 'N/A'}</div>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="font-medium">{target.last_synced || 'N/A'}</div>
+                                            <div className="font-medium">{target.last_sync && new Date(target.last_sync).toLocaleString() || 'N/A'}</div>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end space-x-2">
@@ -164,7 +164,7 @@ const Targets = (props: any) => {
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
                                                 <Button onClick={() => handleDelete(target)} variant="ghost" size="sm">
-                                                    <Trash2 className="h-4 w-4 text-red-600"  />
+                                                    <Trash2 className="h-4 w-4 text-red-600" />
                                                 </Button>
                                             </div>
                                         </TableCell>

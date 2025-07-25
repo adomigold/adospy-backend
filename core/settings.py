@@ -150,6 +150,7 @@ DJANGO_VITE = {
 # Add the build.outDir from vite.config.js to STATICFILES_DIRS
 # so that collectstatic can collect your compiled vite assets.
 STATICFILES_DIRS = [
+    'static',
     BASE_DIR / "static" / "dist"
 ]
 
@@ -157,8 +158,6 @@ STATICFILES_DIRS = [
 # Name of static files folder (after called python manage.py collectstatic)
 STATIC_ROOT = BASE_DIR / "collectedstatic"
 
-
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

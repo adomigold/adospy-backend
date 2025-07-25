@@ -60,6 +60,9 @@ class Target(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.name_alias
+
     @property
     def is_expired(self):
         return datetime.date.today() > self.plan_end
@@ -81,8 +84,38 @@ class SMSMessages(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.message_id
+
     class Meta:
         unique_together = ("target", "message_id")
         indexes = [
             models.Index(fields=['id', 'address']),
         ]
+
+class Contacts(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    contact_id = models.CharField(max_length=225, null=True, blank=True)
+    name = models.CharField(max_length=225, null=True, blank=True)
+    phones = models.JSONField(null=True, blank=True)
+    emails = models.JSONField(null=True, blank=True)
+    addresses = models.JSONField(null=True, blank=True)
+    organizations= models.JSONField(null=True, blank=True)
+    websites = models.JSONField(null=True, blank=True)
+    social_medias = models.JSONField(null=True, blank=True)
+    groups = models.JSONField(null=True, blank=True)
+    notes = models.JSONField(null=True, blank=True)
+    is_google = models.BooleanField(default=False)
+    is_whatsapp = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['id', 'contact_id']),
+        ]
+        unique_together = ("contact_id", "is_google", "is_whatsapp")

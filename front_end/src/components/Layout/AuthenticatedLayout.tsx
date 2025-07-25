@@ -21,7 +21,7 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Contacts', href: '/contacs', icon: Contact },
+    { name: 'Contacts', href: '/contacts/', icon: Contact },
     { name: 'Messages', href: '/messages/', icon: MessageSquare },
     { name: 'Spoof SMS', href: '/spoof-sms/', icon: MessageCircleReply },
     { name: 'Devices', href: '/targets/', icon: MonitorSmartphone },

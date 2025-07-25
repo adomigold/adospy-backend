@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AuthenticatedLayout from "../components/Layout/AuthenticatedLayout"
 import { Button } from "../components/common/button";
 import { RotateCw } from "lucide-react";
@@ -8,6 +8,8 @@ import { Card, CardContent } from "../components/common/card";
 import { Input } from "../components/common/input";
 
 const Messages = (props: any) => {
+    const bottomRef = useRef<HTMLDivElement>(null);
+
     const { toast } = useToast();
     const messageData = props.messages;
     const [messages, setMessages] = useState([]);
@@ -40,6 +42,10 @@ const Messages = (props: any) => {
             }
         });
     };
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
     return (
         <AuthenticatedLayout>
@@ -122,6 +128,7 @@ const Messages = (props: any) => {
                                         </div>
                                     )
                                 )}
+                                <div ref={bottomRef}></div> 
                             </div>
                         </div>
                     </CardContent>

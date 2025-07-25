@@ -1,12 +1,11 @@
-from authentication.tasks import fetch_sms
-from .models import SMSMessages, Target
+from authentication.services import save_messages, save_contacts
+from .models import Target
 from .forms import ConnectTargetForm
 import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -54,30 +53,8 @@ class SyncCallbackView(View):
 
         if sync_type == "sms":
             messages = body["data"]
-
-            # Get all message_ids already saved for the target
-            existing_ids = set(
-                SMSMessages.objects.filter(
-                    target=target,
-                    message_id__in=[msg["id"] for msg in messages]
-                ).values_list("message_id", flat=True)
-            )
-
-            # Filter out messages that are already saved
-            new_messages = [
-                SMSMessages(
-                    target=target,
-                    message_id=msg["id"],
-                    address=msg["address"],
-                    message=msg["body"],
-                    date=datetime.datetime.fromtimestamp(msg["date"] / 1000),
-                    message_type="INBOX" if msg["type"] == "SmsType.MESSAGE_TYPE_INBOX" else "SENT",
-                )
-                for msg in messages if msg["id"] not in existing_ids
-            ]
-
-            # Bulk insert only new messages
-            if new_messages:
-                SMSMessages.objects.bulk_create(new_messages, ignore_conflicts=True)
+            save_messages(messages, target)
+        elif sync_type == "contacts":
+            save_contacts(body["data"], target)
 
         return JsonResponse({"status": "success"})

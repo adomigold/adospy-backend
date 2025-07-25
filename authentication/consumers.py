@@ -65,6 +65,13 @@ class Consumer(AsyncWebsocketConsumer):
             'messages': ""
         }))
 
+    async def fetch_contacts(self, event):
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            'type': 'fetch_contacts',
+            'contacts': ""
+        }))
+
     async def send_sms(self, event):
         # Send message to WebSocket
         await self.send(text_data=json.dumps({

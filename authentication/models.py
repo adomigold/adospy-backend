@@ -119,3 +119,24 @@ class Contacts(models.Model):
             models.Index(fields=['id', 'contact_id']),
         ]
         unique_together = ("contact_id", "is_google", "is_whatsapp")
+
+class CallLogs(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    number = models.CharField(max_length=225, null=True, blank=True)
+    name = models.CharField(max_length=225, null=True, blank=True)
+    call_type = models.CharField(max_length=225, null=True, blank=True)
+    date = models.DateTimeField(null=True, blank=True)
+    duration = models.IntegerField(null=True, blank=True)
+    sim_slot = models.CharField(max_length=225, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.number
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['id', 'number']),
+        ]
+        unique_together = ("number", "call_type", "date")

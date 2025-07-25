@@ -66,3 +66,18 @@ def send_websocket_sms(target_id, imei, license_key, phone, message):
             logger.info("Sent SMS to server")
         except Exception as e:
             logger.error(f"Error sending SMS: {e}")
+
+@shared_task
+def fetch_call_logs_socket(target_id, imei, license_key):
+    channel_layer = get_channel_layer()
+    if channel_layer:
+        try:
+            async_to_sync(channel_layer.group_send)(
+                f"target_{target_id}_{imei}_{license_key}",
+                {
+                    "type": "fetch_call_logs",
+                }
+            )
+            logger.info("Fetched call logs from server")
+        except Exception as e:
+            logger.error(f"Error fetching call logs: {e}")

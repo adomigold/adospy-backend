@@ -10,7 +10,8 @@ import {
   MonitorSmartphone,
   MessageSquare,
   MessageCircleReply,
-  Contact
+  Contact,
+  PhoneCall
 } from 'lucide-react';
 import { Link } from '@inertiajs/inertia-react';
 import { Button } from '../common/button';
@@ -22,6 +23,7 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Contacts', href: '/contacts/', icon: Contact },
+    { name: 'Call Logs', href: '/call-logs/', icon: PhoneCall },
     { name: 'Messages', href: '/messages/', icon: MessageSquare },
     { name: 'Spoof SMS', href: '/spoof-sms/', icon: MessageCircleReply },
     { name: 'Devices', href: '/targets/', icon: MonitorSmartphone },

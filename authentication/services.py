@@ -1,5 +1,7 @@
 import datetime
-from authentication.models import Contacts, SMSMessages
+import json
+from authentication.models import CallLogs, Contacts, SMSMessages
+from django.utils.dateparse import parse_datetime
 
 
 def save_messages(messages, target):
@@ -87,3 +89,42 @@ def save_contacts(contacts, target):
     # Bulk update changed contacts
     if contacts_to_update:
         Contacts.objects.bulk_update(contacts_to_update, ["phones"])
+
+
+def save_call_logs(call_logs, target):
+    # Get all message_ids already saved for the target
+    existing_keys = set(
+        CallLogs.objects.filter(target=target).values_list(
+            "number", "call_type", "date")
+    )
+
+    new_call_logs = []
+    for call_log in call_logs:
+        if call_log["type"] == 'CallType.incoming':
+            call_type = 'INCOMING'
+        elif call_log["type"] == 'CallType.outgoing':
+            call_type = 'OUTGOING'
+        else:
+            call_type = 'MISSED'
+
+        # Safely parse string to datetime
+        call_date = parse_datetime(call_log["date"])
+        key = (call_log["number"], call_type, call_date)
+
+        if key not in existing_keys:
+            new_call_logs.append(
+                CallLogs(
+                    target=target,
+                    number=call_log["number"],
+                    name=call_log["name"],
+                    call_type=call_type,
+                    date=call_date,
+                    duration=call_log["duration"],
+                    sim_slot=call_log["simSlot"],
+                )
+            )
+
+    if new_call_logs:
+        CallLogs.objects.bulk_create(new_call_logs, ignore_conflicts=True)
+
+    return new_call_logs

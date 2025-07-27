@@ -33,3 +33,7 @@ class ConnectTargetForm(forms.Form):
 class SpoofSMSForm(forms.Form):
     phone = forms.CharField(max_length=150, required=False)
     message = forms.CharField(max_length=150, required=False)
+
+
+class UploadFilesForm(forms.Form):
+    file = forms.FileField()

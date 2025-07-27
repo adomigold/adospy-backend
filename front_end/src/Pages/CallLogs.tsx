@@ -4,19 +4,34 @@ import AuthenticatedLayout from "../components/Layout/AuthenticatedLayout"
 import { useForm } from "@inertiajs/inertia-react";
 import { useToast } from "../hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/common/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/common/table";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from "../components/common/table";
 import { useEffect, useState } from "react";
+import TablePagination from "../components/common/tablePagination";
 
 const CallLogs = (props: any) => {
     const callLogsData = props.call_logs;
     const [callLogs, setCallLogs] = useState([]);
+    const [page, setPage] = useState(1);
+    const [show, setShow] = useState(10);
 
     const { toast } = useToast();
     const { get, processing } = useForm({});
 
     useEffect(() => {
-        setCallLogs(callLogsData);
+        setCallLogs(callLogsData.slice(0, show));
     }, [callLogsData]);
+
+    const search = (searchTerm: any) => {
+        if (searchTerm) {
+            const filteredCallLogs = callLogsData.filter((callLog: any) => {
+                return callLog.name?.toLowerCase().includes(searchTerm.toLowerCase()) || callLog.number?.toLowerCase().includes(searchTerm.toLowerCase());
+            });
+            console.log(searchTerm);
+            setCallLogs(filteredCallLogs.slice(0, show));
+        } else {
+            setCallLogs(callLogsData.slice(0, show));
+        }
+    }
 
     const submit = () => {
         get('/sync/call_logs/', {
@@ -56,8 +71,29 @@ const CallLogs = (props: any) => {
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <CardTitle>Calls ({callLogs.length})</CardTitle>
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="text"
+                                    placeholder="Search by contact"
+                                    onChange={(e) => search(e.target.value)}
+                                    className="border border-gray-300 rounded-md px-2 py-1"
+                                />
+                                <select
+                                    onChange={(e) => {
+                                        setShow(parseInt(e.target.value));
+                                        setCallLogs(callLogsData.slice(0, parseInt(e.target.value)));
+                                    }}
+                                    className="border border-gray-300 rounded-md px-2 py-1"
+                                >
+                                    <option value="10">Show 10</option>
+                                    <option value="20">Show 20</option>
+                                    <option value="50">Show 50</option>
+                                    <option value="100">Show 100</option>
+                                </select>
+                            </div>
                         </div>
                     </CardHeader>
+
                     <CardContent>
                         <Table>
                             <TableHeader>
@@ -102,6 +138,9 @@ const CallLogs = (props: any) => {
                                     </TableRow>
                                 ))}
                             </TableBody>
+                            <TableFooter>
+                               <TablePagination page={page} setPage={setPage} show={show} callLogsData={callLogsData} />
+                            </TableFooter>
                         </Table>
                     </CardContent>
                 </Card>

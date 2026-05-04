@@ -1,20 +1,38 @@
 import { Checkbox } from "@radix-ui/react-checkbox"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import { Plus, Edit, Trash2, Loader2 } from "lucide-react"
 import { Button } from "../components/common/button"
 import { Card, CardHeader, CardTitle, CardContent } from "../components/common/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../components/common/table"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AuthenticatedLayout from "../components/Layout/AuthenticatedLayout"
-import AddTargetModal from "../components/targets/AddTargetModal"
 import AliasNameModal from "../components/targets/EditAliasNameModal"
 import { Inertia } from "@inertiajs/inertia"
+import { useForm } from "@inertiajs/inertia-react"
 
 const Targets = (props: any) => {
     const targets = props.targets
     const [selectdTargets, setSelectedTargets] = useState<any>([])
-    const [open, setOpen] = useState(false)
     const [aliasOpen, setAliasOpen] = useState(false)
     const [device, setDevice] = useState<any>({})
+    const [plan, setPlan] = useState('');
+
+    const { data, setData, post, processing } = useForm({
+        plan_type: '',
+    });
+
+    const handleSubmit = () => {
+        setPlan('monthly');
+        setData('plan_type', 'monthly');
+    }
+
+    useEffect(() => {
+        if (plan === 'monthly') {
+            post('/targets/', {});
+            setPlan('');
+        } else {
+            return;
+        }
+    }, [plan])
 
     const handleSelectAll = () => {
         if (selectdTargets.length === targets.length) {
@@ -44,7 +62,8 @@ const Targets = (props: any) => {
                         </p>
                     </div>
                     <div className="flex space-x-3">
-                        <Button onClick={() => setOpen(true)} className="flex items-center text-white  bg-blue-600 hover:bg-blue-700">
+                        <Button onClick={() => handleSubmit()} className="flex items-center text-white  bg-blue-600 hover:bg-blue-700">
+                            {processing && data.plan_type === 'monthly' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : ""}
                             <Plus className="h-4 w-4 mr-2" />
                             Add New Device
                         </Button>
@@ -175,7 +194,6 @@ const Targets = (props: any) => {
                     </CardContent>
                 </Card>
             </div>
-            <AddTargetModal open={open} onOpenChange={() => setOpen(false)} />
             <AliasNameModal target={device} open={aliasOpen} onOpenChange={() => setAliasOpen(false)} />
         </AuthenticatedLayout>
     )

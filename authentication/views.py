@@ -242,12 +242,7 @@ class TargetsView(LoginRequiredMixin, InertiaView):
                 license_key=str(uuid.uuid4()).upper(),
             )
 
-            return render(request, self.template_name, props={
-                "errors": {
-                    "success": "Target created successfully",
-                },
-                "targets": Target.objects.filter(user=user)
-            })
+            return redirect("targets")
 
         return render(request, self.template_name, props={
             "errors": {

@@ -16,6 +16,7 @@ import {
 import { Link } from '@inertiajs/inertia-react';
 import { Button } from '../common/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../common/dropdown-menu';
+import { Inertia } from '@inertiajs/inertia';
 
 const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -29,7 +30,9 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
     { name: 'Devices', href: '/targets/', icon: MonitorSmartphone },
   ];
 
-  const handleLogout = () => {};
+  const handleLogout = () => {
+    Inertia.visit('/signout/');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
@@ -86,21 +89,7 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-l px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <select
-                id="role"
-                name="role"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="founder">Founder/CEO</option>
-                <option value="manager">Manager</option>
-                <option value="sales">Sales</option>
-                <option value="marketing">Marketing</option>
-                <option value="support">Customer Support</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+            <div className="flex items-center space-x-4"></div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm">
                 <Bell className="h-4 w-4" />

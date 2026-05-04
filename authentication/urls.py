@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import (SigninView, SignUpView,
+from .views import (SigninView, SignOutView, SignUpView,
                     VerifyEmailView, ProfileView, TargetsView, MessagesView, SyncTargetView, SpoofSMSView, ContactsView, CallLogsView)
 from .apis import ConnectTargetView, SyncCallbackView, UploadFilesView
 
 urlpatterns = [
     path("signin/", SigninView.as_view(), name="signin"),
+    path("signout/", SignOutView.as_view(), name="signout"),
     path("signup/", SignUpView.as_view(), name="signup"),
     path("verify/<uidb64>/<token>/",
          VerifyEmailView.as_view(), name="verify-email"),

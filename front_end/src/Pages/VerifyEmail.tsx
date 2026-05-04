@@ -14,11 +14,8 @@ const VerifyEmail = (props: any) => {
                         <span className="text-4xl font-bold">Adospy</span>
                     </div>
                     <h2 className="text-3xl font-bold text-center mb-6">
-                        Parental Control Portal
+                        Command And Control Portal
                     </h2>
-                    <p className="text-xl text-center mb-8 text-blue-100">
-                        Keep your child's digital world safe and balanced.
-                    </p>
                     <div className="grid grid-cols-1 gap-4 text-center">
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                             <div className="text-2xl font-bold mb-1">24/7</div>

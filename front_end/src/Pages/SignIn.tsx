@@ -34,21 +34,8 @@ const SignIn = () => {
                         <span className="text-4xl font-bold">Adospy</span>
                     </div>
                     <h2 className="text-3xl font-bold text-center mb-6">
-                        Parental Control Login
+                        Command And Control Server
                     </h2>
-                    <p className="text-xl text-center mb-8 text-blue-100">
-                        Keep your child's digital world safe and balanced.
-                    </p>
-                    <div className="grid grid-cols-1 gap-4 text-center">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                            <div className="text-2xl font-bold mb-1">24/7</div>
-                            <div className="text-blue-100">Device Monitoring</div>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                            <div className="text-2xl font-bold mb-1">500+</div>
-                            <div className="text-blue-100">Active Users</div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Background decoration */}
@@ -58,17 +45,8 @@ const SignIn = () => {
 
             {/* Right side - Login Form */}
             <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-8">
-                <div className="w-full max-w-md">
-                    {/* Back button */}
-                    <Button
-                        onClick={() => { }}
-                        className="mb-6 text-gray-600 hover:text-gray-900"
-                    >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Home
-                    </Button>
-
-                    <Card className="border-2 border-white bg-white/70 backdrop-blur-sm shadow-xl">
+                <div className="w-full max-w-md flex flex-row justify-center items-center">
+                    <Card className="border-2 border-white bg-white/70 backdrop-blur-sm shadow-xl w-full h-full">
                         <CardHeader className="text-center">
                             <div className="flex items-center gap-2 justify-center mb-4 lg:hidden">
                                 <img src={`${address}/static/logo_blue.png`} className="w-12 h-12" alt="" />
@@ -153,22 +131,6 @@ const SignIn = () => {
                                 >
                                     {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                     Sign In
-                                </Button>
-
-                                <div className="relative">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-gray-300" />
-                                    </div>
-                                    <div className="relative flex justify-center text-sm">
-                                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    type="button"
-                                    className="w-full py-3 bg-red-500 border-red-500 text-white hover:bg-red-600 hover:border-red-600 text-lg font-semibold border-2"
-                                >
-                                    Continue with Google
                                 </Button>
                             </form>
 

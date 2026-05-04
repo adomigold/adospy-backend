@@ -39,11 +39,8 @@ const Signup = () => {
             <span className="text-4xl font-bold">Adospy</span>
           </div>
           <h2 className="text-3xl font-bold text-center mb-6">
-            Join the Future of Parental Control
+            Command And Control Server
           </h2>
-          <p className="text-xl text-center mb-8 text-blue-100">
-            Unlock the Power of Parental Control
-          </p>
         </div>
         {/* Background decoration */}
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
@@ -53,17 +50,6 @@ const Signup = () => {
       {/* Right side - Signup Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          {/* Back button */}
-          <Link
-            href='/'
-            className="mb-6 text-gray-600 hover:text-gray-900"
-          >
-            <div className="flex items-center mb-10">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              <span>Back to Home</span>
-            </div>
-          </Link>
-
           <Card className="border-2 border-white bg-white/70 backdrop-blur-sm shadow-xl">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-gray-900">
